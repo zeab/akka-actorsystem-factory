@@ -1,66 +1,61 @@
 package com.zeab.akka.actorsystemfactory
 
-import scala.util.{Failure, Success, Try}
+
 
 trait ActorSystemFactory {
 
-  /** Checks the log level*/
-  def logLevelCheck:String ={
-    Try(sys.env(Envs.logLevel)) match {
-      case Success(value) =>
-        value.toLowerCase match {
-          case LogLevels.info | LogLevels.debug | LogLevels.error | LogLevels.warn | LogLevels.off =>
-            value
-          case _ =>
-            throw new Exception(s"Environment variable ${Envs.logLevel} value $value does not match a required value ${LogLevels.info} | ${LogLevels.error} | ${LogLevels.debug} | ${LogLevels.warn} | ${LogLevels.off}")
-            ""
-        }
-      case Failure(_) =>
-        LogLevels.info
+
+  case object WebServerSettings{
+    case class Server(backlog:String, pipelingLimit:String, requestTimeout:String) {
+      def addBacklog(backlog:String):Server = copy(backlog, pipelingLimit, requestTimeout)
+
     }
+
+    case object HostConnectionPool{
+
+    }
+
+    case object Client{
+
+    }
+
   }
 
-  def getActorSystemConfig(): String ={
 
-    //TODO Move these into a dsl or something
-    val customDispatchers:Option[List[String]] = None
-    val clusterSettings1:Option[String] = None
-    //is in a docker
-    //is seednode
+  def webServerSettings():String ={
 
-    //Cluster settings
-    //externalHostBind
-    //externalPortBind
-    //internalHostBind
-    //internalPostBind
-    //seednodes
-    //roles
+    val backlog = Some("")
 
 
-    val dispatchers:String = customDispatchers match {
-      case Some(d) =>
-        d.mkString("", "\n\n", "")
-      case None =>
-        "#No Custom Dispatchers Defined"
-    }
-
-    val clusterSettings:String = clusterSettings1 match {
-      case Some(settings) =>
-        ""
-      case None =>
-        ""
-    }
-
-    s"""###Custom Dispatchers###
-       |$dispatchers
+    s"""http {
+       |   server {
+       |     backlog = $sizeOfHttpPool
+       |     pipelining-limit = $sizeOfHttpPool
+       |     request-timeout = $serverRequestResponseTimeout
+       |   }
        |
-       |###Akka###
-       |akka {
+       |   host-connection-pool {
+       |     max-connections = $sizeOfHttpPool
+       |     max-open-requests = $sizeOfHttpPool
+       |     #idle-timeout = 1 s
+       |   }
        |
-       |###ClusterSettings###
-       |$clusterSettings
+       |   client {
+       |     connecting-timeout = $clientConnectionTimeout
+       |   }
+       |
        |}""".stripMargin
   }
+
+
+  //WebServerSettings
+    //Server
+      //backlog
+      //pipe
+      //requestimeout
+    //hostconnectionpool
+    //client
+
 
 }
 
